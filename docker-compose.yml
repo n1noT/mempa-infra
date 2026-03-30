@@ -1,0 +1,85 @@
+services:
+
+  mempa-front:
+    build:
+      context: ../mempa-front
+      dockerfile: Dockerfile
+    container_name: mempa-front
+    ports:
+      - "${FRONT_PORT}:4200"
+    env_file: .env
+    environment:
+      NODE_ENV: ${FRONT_NODE_ENV}
+    volumes:
+      - ../mempa-front:/app
+      - /app/node_modules
+    networks:
+      - mempa-app
+
+  mempa-api:
+    build:
+      context: ../mempa-api
+      dockerfile: Dockerfile
+    container_name: mempa-api
+    ports:
+      - "${BACK_PORT}:3000"
+    env_file: .env
+    environment:
+      NODE_ENV: ${BACK_NODE_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+    volumes:
+      - ../mempa-api:/app
+      - api-node-modules:/app/node_modules
+    depends_on:
+      - mempa-db
+    networks:
+      - mempa-app
+      - mempa-db
+
+  mempa-db:
+    image: postgres:16-alpine
+    container_name: mempa-db
+    ports:
+      - "${DB_PORT}:5432"
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - mempa-db
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: mempa-sonarqube
+    ports:
+      - "${SONAR_PORT:-9000}:9000"
+    env_file: .env
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://mempa-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: ${DB_USER}
+      SONAR_JDBC_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-logs:/opt/sonarqube/logs
+      - sonarqube-extensions:/opt/sonarqube/extensions
+    depends_on:
+      - mempa-db
+    networks:
+      - mempa-app
+      - mempa-db
+
+# ── Volumes ───────────────────────────────────────────
+volumes:
+  api-node-modules:
+  db-data:
+  sonarqube-data:
+  sonarqube-logs:
+  sonarqube-extensions:
+
+# ── Réseaux ───────────────────────────────────────────
+networks:
+  mempa-app:
+  mempa-db:
