@@ -23,14 +23,24 @@ For Docker volumes (Bind Mounts) to work correctly, your three repositories must
 
 ## 🚀 Services included in the infrastructure
 
-By launching this infrastructure, the following services will be deployed and interconnected via Docker internal networks:
+This repository is split into two architectures depending on your needs.
+
+### 1. Main Application (`docker-compose.yml`)
+Runs the main app stack.
 
 | Service | Technology | Default Port | Description |
 | :--- | :--- | :--- | :--- |
 | **mempa-front** | Node/Angular | `4200` | User interface (Hot-reload enabled). |
 | **mempa-api** | Node/Express | `3000` | Backend API connected to Prisma. |
-| **mempa-db** | PostgreSQL 16 | `5432` | Main database. |
+| **mempa-db** | PostgreSQL 16 | `5432` | Main application database. |
+
+### 2. Code Quality & Analysis (`docker-compose.sonar.yml`)
+Isolated tools specifically for code analysis. You only need to run this when performing analysis to save system resources.
+
+| Service | Technology | Default Port | Description |
+| :--- | :--- | :--- | :--- |
 | **mempa-sonarqube**| SonarQube | `9000` | Continuous code quality analysis tool. |
+| **mempa-sonarqube-db**| PostgreSQL 16 | *(Internal)* | Dedicated isolated database for SonarQube. |
 
 ---
 
@@ -56,9 +66,6 @@ DB_NAME=mempa_db
 
 # URL used for Prisma
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@mempa-db:5432/${DB_NAME}?schema=public"
-
-# SonarQube
-SONAR_PORT=9000
 ```
 
 You must also initialize the API's `.env` file by copying the `.env.example` file provided in the `mempa-api` repository and update it with the correct `DATABASE_URL` (which should point to the `mempa-db` service):
@@ -80,12 +87,23 @@ npm install
 ```
 
 ### 3. Launching the infrastructure
+
+**To run the main application:**
 Go back to the `mempa-infra` folder and start the containers:
 ```bash
 cd ../mempa-infra
 docker compose up -d --build
 ```
 *(The `--build` flag ensures that Docker images are recreated according to the latest `Dockerfile` modifications).*
+
+**To run Code Quality Analysis (SonarQube):**
+When you are ready to perform a code scan, you can launch the isolated SonarQube environment:
+```bash
+docker compose -f docker-compose.sonar.yml up -d
+```
+*(To save system resources, you can stop it when your analysis is done by running `docker compose -f docker-compose.sonar.yml down`)*.
+
+Then you can access SonarQube at `http://localhost:9000` and use the default credentials (`admin`/`admin`) to log in.
 
 ### 4. Database Initialization (Prisma)
 Once the PostgreSQL database is started, apply the Prisma migrations and generate the client locally (from your machine):
