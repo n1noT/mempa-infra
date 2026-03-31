@@ -10,6 +10,11 @@ services:
       - sonarqube-db-data:/var/lib/postgresql/data
     networks:
       - sonar-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonarqube -d sonarqube"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   sonarqube:
     image: sonarqube:community
@@ -25,7 +30,8 @@ services:
       - sonarqube-logs:/opt/sonarqube/logs
       - sonarqube-extensions:/opt/sonarqube/extensions
     depends_on:
-      - sonarqube-db
+      sonarqube-db:
+        condition: service_healthy
     networks:
       - sonar-net
 
