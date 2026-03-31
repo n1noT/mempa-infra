@@ -51,34 +51,9 @@ services:
     networks:
       - mempa-db
 
-  sonarqube:
-    image: sonarqube:community
-    container_name: mempa-sonarqube
-    ports:
-      - "${SONAR_PORT:-9000}:9000"
-    env_file: .env
-    environment:
-      SONAR_JDBC_URL: jdbc:postgresql://mempa-db:5432/sonarqube
-      SONAR_JDBC_USERNAME: ${DB_USER}
-      SONAR_JDBC_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - sonarqube-data:/opt/sonarqube/data
-      - sonarqube-logs:/opt/sonarqube/logs
-      - sonarqube-extensions:/opt/sonarqube/extensions
-    depends_on:
-      - mempa-db
-    networks:
-      - mempa-app
-      - mempa-db
-
-# ── Volumes ───────────────────────────────────────────
 volumes:
   db-data:
-  sonarqube-data:
-  sonarqube-logs:
-  sonarqube-extensions:
 
-# ── Réseaux ───────────────────────────────────────────
 networks:
   mempa-app:
   mempa-db:
