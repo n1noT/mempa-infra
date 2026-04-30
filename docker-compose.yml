@@ -51,6 +51,20 @@ services:
     networks:
       - mempa-db
 
+  mempa-db-init:
+    build:
+      context: ../mempa-api
+      dockerfile: Dockerfile
+    container_name: mempa-db-init
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      - mempa-db
+    command: [ "bash", "-lc", "bash /app/scripts/db-init.sh" ]
+    networks:
+      - mempa-db
+
   sonarqube:
     image: sonarqube:community
     container_name: mempa-sonarqube
@@ -79,7 +93,7 @@ volumes:
   sonarqube-logs:
   sonarqube-extensions:
 
-# ── Réseaux ───────────────────────────────────────────
+    # ── Réseaux ───────────────────────────────────────────
 networks:
   mempa-app:
   mempa-db:
